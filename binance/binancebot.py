@@ -36,16 +36,31 @@ class BinanceBot(Subscriber):
         if message['type'] == 'message':
             print(f'message: {message["message"]}')
             return
+        
+        if message['type'] != 'kline': 
+            return
 
         now = datetime.now()
         if self.lastShow is None or (now - self.lastShow).total_seconds() > self.timeLimit:
-            coinPair = message['pair']
-            interval = message['interval']
-            startDate = message['startDate']
-            kline = self.getKlines(coinPair, interval, startDate)
-            print(kline)
-            self.plotKlines(kline=kline, type='candle', coinPair=coinPair, interval=interval)
-            self.lastShow = datetime.now()
+            try:
+                coinPair = message['coinPair']
+                interval = message['interval']
+                startDate = message['startDate']
+                channelID = message['channelID']
+                kline = self.getKlines(coinPair, interval, startDate)
+                print(kline)
+                
+                savePath = self.plotKlines(kline=kline, type='candle', coinPair=coinPair, interval=interval)
+                if savePath is None:
+                    print('Cannot plot klines...')
+                    return
+
+                self.sendKlines(imgpath=savePath, channel=channelID)
+                self.lastShow = datetime.now()
+            
+            except Exception as err:
+                print(f'Error occured: {err}')
+
 
     def getPrice(self):
         prices = self.binanceClient.get_all_tickers()
@@ -90,9 +105,11 @@ class BinanceBot(Subscriber):
         savePath = f'{saveDir}/{now}.png'
         try:
             mpf.plot(kline, type=type, title=title, savefig=savePath)
-            self.sendKlines(imgpath=savePath)
+            # self.sendKlines(imgpath=savePath)
+            return savePath
         except Exception as err:
             print(f'err occured: {err}')
+            return None
 
 if __name__ == "__main__":
 
