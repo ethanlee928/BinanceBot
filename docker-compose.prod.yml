@@ -6,7 +6,7 @@ services:
     volumes:
       - ./binance:/app/binance/
       - ./utils/:/app/binance/utils/
-    command: tail -f /dev/null
+    command: python3 -u ./binance/binancebot.py
 
   slackbot:
     ports:
@@ -14,4 +14,5 @@ services:
     volumes:
       - ./slack:/app/slack/
       - ./utils/:/app/slack/utils/
-    command: tail -f /dev/null
+    command: python3 -u ./slack/slackbot.py
+    
