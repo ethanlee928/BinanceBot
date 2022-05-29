@@ -15,7 +15,7 @@ from utils.mqtt import Subscriber, Publisher
 
 class BinanceBot(Subscriber):
 
-    def __init__(self, broker, port, topic, client_id):
+    def __init__(self, broker, port, topic, client_id, dataDir, timeLimit):
         super().__init__(broker, port, topic, client_id)
         self.key = os.getenv('BINANCE_KEY')
         self.secret = os.getenv('BINANCE_SECRET')
@@ -24,9 +24,9 @@ class BinanceBot(Subscriber):
         self.slackToken = os.getenv('SLACK_TOKEN')
 
         self.lastShow = None
-        self.timeLimit = 20
+        self.timeLimit = timeLimit
 
-        self.dataDir = './data'
+        self.dataDir = dataDir
 
         self.subThread = Thread(target=self.start_subscribe)
         self.subThread.start() 
@@ -118,12 +118,16 @@ if __name__ == "__main__":
     parser.add_argument('--port', default=1883)
     parser.add_argument('--topic', default='pair')
     parser.add_argument('--client_id', default='binancebot')
+    parser.add_argument('--data_dir', default='./binance/data')
+    parser.add_argument('--time_limit', type=int, default=20)
     args = parser.parse_args()
 
     broker = args.broker
     port = args.port
     topic = args.topic
     client_id = args.client_id
+    data_dir = args.data_dir
+    time_limit = args.time_limit
 
-    bbot = BinanceBot(broker=broker, port=port, topic=topic, client_id=client_id)
+    bbot = BinanceBot(broker=broker, port=port, topic=topic, client_id=client_id, dataDir=data_dir, timeLimit=time_limit)
     
