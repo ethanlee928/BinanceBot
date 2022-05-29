@@ -1,5 +1,6 @@
 import os
 import json
+import argparse
 import requests
 
 import numpy as np
@@ -105,7 +106,6 @@ class BinanceBot(Subscriber):
         savePath = f'{saveDir}/{now}.png'
         try:
             mpf.plot(kline, type=type, title=title, savefig=savePath)
-            # self.sendKlines(imgpath=savePath)
             return savePath
         except Exception as err:
             print(f'err occured: {err}')
@@ -113,23 +113,17 @@ class BinanceBot(Subscriber):
 
 if __name__ == "__main__":
 
-    broker = 'mosquitto'
-    port = 1883
-    topic = 'pair'
-    client_id = 'binancebot'
+    parser = argparse.ArgumentParser(description='Binance bot configuration')
+    parser.add_argument('--broker', default='mosquitto')
+    parser.add_argument('--port', default=1883)
+    parser.add_argument('--topic', default='pair')
+    parser.add_argument('--client_id', default='binancebot')
+    args = parser.parse_args()
 
-    pair = 'LUNABUSD'
-    timeInterval = '5m'
-    startTime = '15/5/2022 00:00:00'
-
+    broker = args.broker
+    port = args.port
+    topic = args.topic
+    client_id = args.client_id
 
     bbot = BinanceBot(broker=broker, port=port, topic=topic, client_id=client_id)
-    # prices = bbot.getPrice()
-    # kline = bbot.getKlines('ETHUSDT', '15m', '13 May 2022 12:00:00')
-    # try:
-    #     kline = bbot.getKlines(pair, timeInterval, startTime)
-    #     mpf.plot(kline, type='candle', title=f'{pair}-{timeInterval}', savefig=f'./data/{pair}_test.png')
-    # except Exception as err:
-    #     print(f'err occured: {err}')
-    
     
