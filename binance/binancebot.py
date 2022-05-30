@@ -12,6 +12,7 @@ from threading import Thread
 
 from binance.client import Client
 from utils.mqtt import Subscriber, Publisher
+from utils.logger import get_logger
 
 class BinanceBot(Subscriber):
 
@@ -28,6 +29,8 @@ class BinanceBot(Subscriber):
 
         self.dataDir = dataDir
 
+        self.logger = get_logger(name='BBOT')
+
         self.subThread = Thread(target=self.start_subscribe)
         self.subThread.start() 
         
@@ -35,7 +38,7 @@ class BinanceBot(Subscriber):
         message = msg.payload.decode()
         message = json.loads(message)
         if message['type'] == 'message':
-            print(f'message: {message["message"]}')
+            self.logger.info("message from MQTT: " % (message["message"]))
             return
         
         if message['type'] != 'kline': 
@@ -49,18 +52,17 @@ class BinanceBot(Subscriber):
                 startDate = message['startDate']
                 channelID = message['channelID']
                 kline = self.getKlines(coinPair, interval, startDate)
-                print(kline)
                 
                 savePath = self.plotKlines(kline=kline, type='candle', coinPair=coinPair, interval=interval)
                 if savePath is None:
-                    print('Cannot plot klines...')
+                    self.logger.error("Cannot plot klines")
                     return
 
                 self.sendKlines(imgpath=savePath, channel=channelID)
                 self.lastShow = datetime.now()
             
             except Exception as err:
-                print(f'Error occured: {err}')
+                self.logger.error("Kline component error: %s" % err)
 
 
     def getPrice(self):
@@ -92,7 +94,7 @@ class BinanceBot(Subscriber):
         files = {'file': open(imgpath, 'rb')}
 
         res = requests.post(api, headers=headers, data=data, files=files)
-        print(res.status_code)
+        self.logger.info("Klines sent with response code: %s" %res.status_code)
         return res.status_code
         
     
@@ -106,9 +108,10 @@ class BinanceBot(Subscriber):
         savePath = f'{saveDir}/{now}.png'
         try:
             mpf.plot(kline, type=type, title=title, savefig=savePath)
+            self.logger.info("Klines plotted")
             return savePath
         except Exception as err:
-            print(f'err occured: {err}')
+            self.logger.error("PlotKlines error: %s" % err)
             return None
 
 if __name__ == "__main__":

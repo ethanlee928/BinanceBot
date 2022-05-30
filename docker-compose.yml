@@ -8,6 +8,12 @@ services:
       - 9001:9001
     volumes:
       - ./mqtt/:/mosquitto/
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "5"
+
   
   binancebot:
     build: 
@@ -16,6 +22,11 @@ services:
     hostname: binancebot
     env_file:
       - .env
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "5"
 
   slackbot:
     build:
@@ -24,4 +35,8 @@ services:
     hostname: slackbot
     env_file:
       - .env
-
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "5"

@@ -1,5 +1,6 @@
 import json
 import paho.mqtt.client as mqtt
+from utils.logger import get_logger
 
 class Subscriber:
     def __init__(self, broker, port, topic, client_id):
@@ -8,6 +9,8 @@ class Subscriber:
         self.topic = topic
         self.client_id = client_id
 
+        self.logger = get_logger(name="SUB")
+
         self.client = mqtt.Client(client_id)
         self.client.on_connect = self.on_connect
         self.client.connect(self.broker, self.port)
@@ -15,9 +18,9 @@ class Subscriber:
 
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
-            print("Connected to MQTT Broker!")
+            self.logger.info("Connected to MQTT Broker!")
         else:
-            print("Failed to connect, return code %d\n", rc)
+            self.logger.error("Failed to connect, return code %d\n", rc)
     
     def on_message(self, client, userdata, msg):
         message = msg.payload.decode()
@@ -35,6 +38,8 @@ class Publisher:
         self.port = port
         self.client_id = client_id
 
+        self.logger = get_logger(name="PUB")
+
         self.client = mqtt.Client(client_id)
         self.client.on_connect = self.on_connect
         self.client.connect(self.broker, self.port)
@@ -42,9 +47,9 @@ class Publisher:
     
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
-            print("Connected to MQTT Broker!")
+            self.logger.info("Connected to MQTT Broker!")
         else:
-            print("Failed to connect, return code %d\n", rc)   
+            self.logger.error("Failed to connect, return code %d\n", rc)
 
     def publish(self, topic, message):
 
@@ -52,7 +57,7 @@ class Publisher:
         result = self.client.publish(topic, msg)
         status = result[0]
         if status == 0:
-            print(f"Send `{msg}` to topic `{topic}`")
+            self.logger.info("Send %s to topic %s" % (msg, topic))
         
         else:
-            print(f"Failed to send message to topic {topic}")
+            self.logger.error("Failed to send message to topic %s" % topic)            

@@ -7,6 +7,7 @@ from flask import Flask
 from slack import WebClient
 from slackeventsapi import SlackEventAdapter
 from utils.mqtt import Subscriber, Publisher
+from utils.logger import get_logger
 
 
 parser = argparse.ArgumentParser(description='Slack bot configuration.')
@@ -25,6 +26,8 @@ port = args.port
 topic = args.topic
 client_id = args.client_id
 pub = Publisher(broker, port, client_id)
+
+logger = get_logger(name='SBOT')
 
 
 @slack_events_adapter.on("message")
@@ -59,10 +62,11 @@ def message(payload):
             "channelID": channel
         }
         payload = json.dumps(payload)
-        pub.publish(topic=topic, message=payload)        
+        pub.publish(topic=topic, message=payload) 
+        logger.info("Published %s to %s" % (payload, topic))       
 
     except Exception as err:
-        print(f'Error occured: {err}')
+        logger.error("Slack OnMessage error: %s" % err)
 
 
 def slackMsg(channelID, msg):
@@ -71,9 +75,9 @@ def slackMsg(channelID, msg):
             channel=channelID,
             text=msg
         )
+        logger.info("Msg sent to %s:\n%s" % (channelID, msg))
     except Exception as err:
-        print(f'Error occured: {err}')
-
+        logger.error("Slack send message error %s" % err)
 
 
 if __name__ == "__main__":
