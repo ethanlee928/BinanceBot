@@ -45,6 +45,10 @@ class BinanceBot(Subscriber):
             self.handleKline(message=message)
             return
         
+        if message['type'] == 'price':
+            self.handlePrice(message=message)
+            return 
+        
         if message['type'] == 'ping':
             status = self.pingServer()
             channelID = message["channelID"]
@@ -76,6 +80,15 @@ class BinanceBot(Subscriber):
             except Exception as err:
                 self.logger.error("Kline component error: %s" % err)
 
+    def handlePrice(self, message):
+        try:
+            coinPair = message['coinPair']
+            channelID = message['channelID']
+            mins, price = self.getCoinPrice(coinPair=coinPair)
+            message = f'[{coinPair}] {mins}m average: {price}'
+            self.sendMsg(msg=message, channel=channelID)
+        except Exception as err:
+            self.logger.error("Coinpair price component error: %s" % err)
 
     def pingServer(self):
         status = self.binanceClient.get_system_status()
@@ -86,6 +99,12 @@ class BinanceBot(Subscriber):
     def getPrice(self):
         prices = self.binanceClient.get_all_tickers()
         return prices
+    
+    def getCoinPrice(self, coinPair):
+        avg_price = self.binanceClient.get_avg_price(symbol=coinPair)
+        mins = avg_price['mins']
+        price = avg_price['price']
+        return mins, price
 
     def getKlines(self, coin_pair, interval, start_time):
         klinesBinance = self.binanceClient.get_historical_klines(coin_pair, interval, start_time)
