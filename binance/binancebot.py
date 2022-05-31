@@ -40,10 +40,22 @@ class BinanceBot(Subscriber):
         if message['type'] == 'message':
             self.logger.info("message from MQTT: " % (message["message"]))
             return
+
+        if message['type'] == 'kline':
+            self.handleKline(message=message)
+            return
         
-        if message['type'] != 'kline': 
+        if message['type'] == 'ping':
+            status = self.pingServer()
+            channelID = message["channelID"]
+            if status:
+                self.sendMsg(msg='Binance server normal', channel=channelID)
+            else:
+                self.sendMsg(msg='Binance server under maintenance', channel=channelID)
             return
 
+
+    def handleKline(self, message):
         now = datetime.now()
         if self.lastShow is None or (now - self.lastShow).total_seconds() > self.timeLimit:
             try:
@@ -65,6 +77,12 @@ class BinanceBot(Subscriber):
                 self.logger.error("Kline component error: %s" % err)
 
 
+    def pingServer(self):
+        status = self.binanceClient.get_system_status()
+        if status["status"] == 0:
+            return True
+        return False
+
     def getPrice(self):
         prices = self.binanceClient.get_all_tickers()
         return prices
@@ -85,6 +103,15 @@ class BinanceBot(Subscriber):
         df.drop(['date'], inplace=True, axis=1)
         df = df.astype(float)
         return df
+    
+    def sendMsg(self, msg, channel):
+        api = 'https://slack.com/api/chat.postMessage'
+        token = 'Bearer ' + self.slackToken
+        headers = {'Authorization': token}
+        data = {'channel': channel, 'text': msg}
+        res = requests.post(api, headers=headers, data=data)
+        self.logger.info("Message sent with response code: %s" %res.status_code)
+        return res.status_code
 
     def sendKlines(self, imgpath, channel):
         api = 'https://slack.com/api/files.upload'
@@ -133,4 +160,3 @@ if __name__ == "__main__":
     time_limit = args.time_limit
 
     bbot = BinanceBot(broker=broker, port=port, topic=topic, client_id=client_id, dataDir=data_dir, timeLimit=time_limit)
-    

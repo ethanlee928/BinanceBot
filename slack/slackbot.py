@@ -41,33 +41,49 @@ def message(payload):
         if event.get('bot_id'):
             return
 
-        if textSlice[0] != 'check':
-            message = 'Your commands are not recognised, try:\n' + 'check (coinpair) (interval) (start time)' 
+        if textSlice[0] not in ['check', 'ping']:
+            message = 'Your commands are not recognised, try:\n' + '1. ping\n' +'2. check (coinpair) (interval) (start time)' 
             slackMsg(channelID=channel, msg=message)
             return
+        
+        if textSlice[0] == 'check':
+            handleCheckPrice(command=textSlice, channel=channel)
 
-        if len(textSlice) != 4:
-            message = 'Wrong syntax, try:\ncheck (coinpair) (interval) (start time)'
-            slackMsg(channelID=channel, msg=message)
-            return
-
-        coinPair = textSlice[1].upper()
-        interval = textSlice[2]
-        startTime = textSlice[3]
-        payload = {
-            "type": "kline",
-            "coinPair": coinPair,
-            "interval": interval,
-            "startDate": startTime,
-            "channelID": channel
-        }
-        payload = json.dumps(payload)
-        pub.publish(topic=topic, message=payload) 
-        logger.info("Published %s to %s" % (payload, topic))       
-
+        if textSlice[0] == 'ping':
+            handlePing(channel=channel)
+    
     except Exception as err:
         logger.error("Slack OnMessage error: %s" % err)
 
+def handleCheckPrice(command, channel):
+    if len(command) != 4:
+        logger.info('Wrong syntax for check price')
+        message = 'Wrong syntax, try:\ncheck (coinpair) (interval) (start time)'
+        slackMsg(channelID=channel, msg=message)
+        return
+
+    coinPair = command[1].upper()
+    interval = command[2]
+    startTime = command[3]
+    payload = {
+        "type": "kline",
+        "coinPair": coinPair,
+        "interval": interval,
+        "startDate": startTime,
+        "channelID": channel
+    }    
+    payload = json.dumps(payload)
+    pub.publish(topic=topic, message=payload)     
+    logger.info("Published %s to %s" % (payload, topic))
+
+def handlePing(channel):
+    payload = {
+        "type": "ping",
+        "channelID": channel
+    }
+    payload = json.dumps(payload)
+    pub.publish(topic=topic, message=payload)
+    logger.info("Published %s to %s" % (payload, topic))
 
 def slackMsg(channelID, msg):
     try:
@@ -83,5 +99,3 @@ def slackMsg(channelID, msg):
 if __name__ == "__main__":
 
     app.run(host='0.0.0.0', port=5001)
-    slackMsg(channelID="C03G2NCPY8P", msg="Slackbot disconnected...")
-
