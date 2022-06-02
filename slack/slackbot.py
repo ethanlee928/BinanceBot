@@ -41,11 +41,14 @@ def message(payload):
         if event.get('bot_id'):
             return
 
-        if textSlice[0] not in ['chart', 'price', 'ping']:
-            message = 'Your commands are not recognised, try:\n' + '1. ping\n' +'2. chart (coinpair) (interval) (start time)\n' + '3. price (coinpair)' 
-            slackMsg(channelID=channel, msg=message)
+        if textSlice[0] not in ['chart', 'price', 'ping', 'help']:
+            logger.info('Command not recognised')
             return
         
+        if textSlice[0] == 'help':
+            message = 'Available commands:\n' + '1. ping\n' +'2. chart (coinpair) (interval) (start time)\n' + '3. price (coinpair)' 
+            slackMsg(channelID=channel, msg=message)            
+
         if textSlice[0] == 'chart':
             handleChartPrice(command=textSlice, channel=channel)
 
