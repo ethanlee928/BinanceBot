@@ -41,13 +41,17 @@ class BinanceBot(Subscriber):
             self.logger.info("message from MQTT: " % (message["message"]))
             return
 
-        if message['type'] == 'kline':
+        if message['type'] == 'chart':
             self.handleKline(message=message)
             return
         
         if message['type'] == 'price':
             self.handlePrice(message=message)
             return 
+        
+        if message['type'] == 'info':
+            self.handleInfo(message=message)
+            return
         
         if message['type'] == 'ping':
             status = self.pingServer()
@@ -90,6 +94,17 @@ class BinanceBot(Subscriber):
         except Exception as err:
             self.logger.error("Coinpair price component error: %s" % err)
 
+    def handleInfo(self, message):
+        try:
+            coinPair = message['coinPair']
+            interval = message['interval']
+            channelID = message['channelID']
+            info = self.getInfo(coinPair=coinPair, interval=interval)
+            message = f'[{coinPair}] Open Time: {info["openTime"]}\tClose Time: {info["closeTime"]}\nOpen Price: {info["openPrice"]}\nCurrent Price: {info["closePrice"]}\nHigh: {info["high"]}\nVolume: {info["volume"]}\nQuote Volume: {info["quoteVolume"]}'
+            self.sendMsg(msg=message, channel=channelID)
+        except Exception as err:
+            self.logger.error("Coinpair info component error: %s" % err)
+
     def pingServer(self):
         status = self.binanceClient.get_system_status()
         if status["status"] == 0:
@@ -99,6 +114,20 @@ class BinanceBot(Subscriber):
     def getPrice(self):
         prices = self.binanceClient.get_all_tickers()
         return prices
+    
+    def getInfo(self, coinPair, interval):
+        candle = self.binanceClient.get_klines(symbol=coinPair, interval=interval)[-1]
+        info = {
+            "openTime": datetime.fromtimestamp(candle[0] / 1000).strftime("%Y-%m-%d %H:%M:%S"),
+            "openPrice": candle[1],
+            "high": candle[2],
+            "low": candle[3],
+            "closePrice": candle[4],
+            "volume": candle[5],
+            "closeTime": datetime.fromtimestamp(candle[6] / 1000).strftime("%Y-%m-%d %H:%M:%S"),
+            "quoteVolume": candle[7]
+        }
+        return info
     
     def getCoinPrice(self, coinPair):
         avg_price = self.binanceClient.get_avg_price(symbol=coinPair)

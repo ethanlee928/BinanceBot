@@ -41,20 +41,23 @@ def message(payload):
         if event.get('bot_id'):
             return
 
-        if textSlice[0] not in ['chart', 'price', 'ping', 'help']:
+        if textSlice[0] not in ['chart', 'price', 'ping', 'info', 'help']:
             logger.info('Command not recognised')
             return
         
         if textSlice[0] == 'help':
-            message = 'Available commands:\n' + '1. ping\n' +'2. chart (coinpair) (interval) (start time)\n' + '3. price (coinpair)' 
+            message = 'Available commands:\n' + '1. ping\n' +'2. chart (coinpair) (interval) (start time)\n' + '3. price (coinpair)\n' + '4. info (coinpair) (interval)'
             slackMsg(channelID=channel, msg=message)            
 
         if textSlice[0] == 'chart':
             handleChartPrice(command=textSlice, channel=channel)
 
+        if textSlice[0] == 'info':
+            handleInfo(command=textSlice, channel=channel)
+
         if textSlice[0] == 'price':
             handleCheckPrice(command=textSlice, channel=channel)
-
+        
         if textSlice[0] == 'ping':
             handlePing(channel=channel)
     
@@ -72,7 +75,7 @@ def handleChartPrice(command, channel):
     interval = command[2]
     startTime = command[3]
     payload = {
-        "type": "kline",
+        "type": "chart",
         "coinPair": coinPair,
         "interval": interval,
         "startDate": startTime,
@@ -96,6 +99,24 @@ def handleCheckPrice(command, channel):
     }
     payload = json.dumps(payload)
     pub.publish(topic=topic, message=payload)     
+
+def handleInfo(command, channel):
+    if len(command) != 3:
+        logger.info('Wrong syntax to check coinpair info')
+        message = 'Wrong syntax, try:\ninfo (coinpair) (interval)'
+        slackMsg(channelID=channel, msg=message)
+        return
+    
+    coinPair = command[1].upper()
+    interval = command[2]
+    payload = {
+        "type": "info",
+        "coinPair": coinPair,
+        "interval": interval,
+        "channelID": channel
+    }
+    payload = json.dumps(payload)
+    pub.publish(topic=topic, message=payload)
 
 def handlePing(channel):
     payload = {
