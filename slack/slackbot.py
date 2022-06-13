@@ -28,6 +28,7 @@ client_id = args.client_id
 pub = Publisher(broker, port, client_id)
 
 logger = get_logger(name='SBOT')
+available_commands = ['chart', 'price', 'ping', 'info', 'help', 'start', 'stop']
 
 
 @slack_events_adapter.on("message")
@@ -41,7 +42,7 @@ def message(payload):
         if event.get('bot_id'):
             return
 
-        if textSlice[0] not in ['chart', 'price', 'ping', 'info', 'help']:
+        if textSlice[0] not in available_commands:
             logger.info('Command not recognised')
             return
         
@@ -60,9 +61,21 @@ def message(payload):
         
         if textSlice[0] == 'ping':
             handlePing(channel=channel)
+
+        if textSlice[0] == 'start':
+            ...
+        
+        if textSlice[0] == 'stop':
+            ...
     
     except Exception as err:
         logger.error("Slack OnMessage error: %s" % err)
+
+def handleStart(command, channel, userID):
+    ...
+
+def handleStop(command, channel, userID):
+    ...
 
 def handleChartPrice(command, channel):
     if len(command) != 4:
