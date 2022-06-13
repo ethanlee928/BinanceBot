@@ -38,6 +38,7 @@ def message(payload):
         text = event.get("text").lower()
         textSlice = text.strip().split()
         channel = event.get("channel")
+        userID = event.get("user")
         
         if event.get('bot_id'):
             return
@@ -63,19 +64,47 @@ def message(payload):
             handlePing(channel=channel)
 
         if textSlice[0] == 'start':
-            ...
+            handleStart(command=textSlice, channel=channel, userID=userID)
         
         if textSlice[0] == 'stop':
-            ...
+            handleStop(command=textSlice, channel=channel, userID=userID)
     
     except Exception as err:
         logger.error("Slack OnMessage error: %s" % err)
 
 def handleStart(command, channel, userID):
-    ...
+    if len(command) != 3:
+        logger.info('Wrong syntax for starting price report')
+        message = 'Wrong syntax for starting price report, try:\nstart (coinpair) (report interval)'
+        slackMsg(channelID=channel, msg=message)
+        return 
+    coinPair = command[1].upper()
+    interval = command[2]
+    payload = {
+        "type": "start",
+        "coinPair": coinPair,
+        "interval": interval, 
+        "userID": userID,
+        "channelID": channel
+    }
+    payload = json.dumps(payload)
+    pub.publish(topic=topic, message=payload)
 
 def handleStop(command, channel, userID):
-    ...
+    if len(command) != 2:
+        logger.info('Wrong syntax for stopping price report')
+        message = 'Wrong syntax for stopping price report, try:\nstop (coinpair)'
+        return
+
+    coinPair = command[1].upper()
+    payload = {
+        "type": "stop",
+        "coinPair": coinPair,
+        "userID": userID,
+        "channelID": channel
+    }
+    payload = json.dumps(payload)
+    pub.publish(topic=topic, message=payload)
 
 def handleChartPrice(command, channel):
     if len(command) != 4:
