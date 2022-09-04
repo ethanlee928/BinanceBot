@@ -1,0 +1,9 @@
+numpy==1.23.2
+python-binance==0.2.0
+paho-mqtt==1.6.1
+matplotlib==3.5.3
+mplfinance==0.12.9b1
+pandas==1.4.4
+slackclient==2.9.4
+slackeventsapi==3.0.1
+Flask==2.2.2
