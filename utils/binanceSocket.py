@@ -6,7 +6,7 @@ from binance import AsyncClient, BinanceSocketManager
 from binance.enums import *
 
 
-class BinanceSocket():
+class BinanceSocket:
     def __init__(self, coin_pair):
         self.coin_pair = coin_pair
         self.loop = None
@@ -32,17 +32,18 @@ class BinanceSocket():
         self.proc.start()
 
     def setStop(self):
-        print('Stop triggered')
+        print("Stop triggered")
         self.proc.terminate()
         self.proc.join()
         self.loop = None
 
+
 if __name__ == "__main__":
 
-    BS = BinanceSocket('ETHUSDT')
+    BS = BinanceSocket("ETHUSDT")
     BS.start_process()
     time.sleep(5)
-    BS2 = BinanceSocket('BTCUSDT')
+    BS2 = BinanceSocket("BTCUSDT")
     BS2.start_process()
     time.sleep(10)
     BS.setStop()

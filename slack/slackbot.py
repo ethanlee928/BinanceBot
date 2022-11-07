@@ -18,9 +18,7 @@ parser.add_argument("--client_id", default="slackbot-pub")
 args = parser.parse_args()
 
 app = Flask(__name__)
-slack_events_adapter = SlackEventAdapter(
-    os.getenv("SLACK_EVENT_TOKEN"), "/slack/events", app
-)
+slack_events_adapter = SlackEventAdapter(os.getenv("SLACK_EVENT_TOKEN"), "/slack/events", app)
 slack_web_client = WebClient(os.getenv("SLACK_TOKEN"))
 
 broker = args.broker

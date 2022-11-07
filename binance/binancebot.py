@@ -64,10 +64,7 @@ class BinanceBot(Subscriber):
 
     def handleKline(self, message):
         now = datetime.now()
-        if (
-            self.lastShow is None
-            or (now - self.lastShow).total_seconds() > self.timeLimit
-        ):
+        if self.lastShow is None or (now - self.lastShow).total_seconds() > self.timeLimit:
             try:
                 coinPair = message["coinPair"]
                 interval = message["interval"]
@@ -75,9 +72,7 @@ class BinanceBot(Subscriber):
                 channelID = message["channelID"]
                 kline = self.getKlines(coinPair, interval, startDate)
 
-                savePath = self.plotKlines(
-                    kline=kline, type="candle", coinPair=coinPair, interval=interval
-                )
+                savePath = self.plotKlines(kline=kline, type="candle", coinPair=coinPair, interval=interval)
                 if savePath is None:
                     self.logger.error("Cannot plot klines")
                     return
@@ -122,17 +117,13 @@ class BinanceBot(Subscriber):
     def getInfo(self, coinPair, interval):
         candle = self.binanceClient.get_klines(symbol=coinPair, interval=interval)[-1]
         info = {
-            "openTime": datetime.fromtimestamp(candle[0] / 1000).strftime(
-                "%Y-%m-%d %H:%M:%S"
-            ),
+            "openTime": datetime.fromtimestamp(candle[0] / 1000).strftime("%Y-%m-%d %H:%M:%S"),
             "openPrice": candle[1],
             "high": candle[2],
             "low": candle[3],
             "closePrice": candle[4],
             "volume": candle[5],
-            "closeTime": datetime.fromtimestamp(candle[6] / 1000).strftime(
-                "%Y-%m-%d %H:%M:%S"
-            ),
+            "closeTime": datetime.fromtimestamp(candle[6] / 1000).strftime("%Y-%m-%d %H:%M:%S"),
             "quoteVolume": candle[7],
         }
         return info
@@ -144,14 +135,10 @@ class BinanceBot(Subscriber):
         return mins, price
 
     def getKlines(self, coin_pair, interval, start_time):
-        klinesBinance = self.binanceClient.get_historical_klines(
-            coin_pair, interval, start_time
-        )
+        klinesBinance = self.binanceClient.get_historical_klines(coin_pair, interval, start_time)
         klines = []
         for item in klinesBinance:
-            openTime = datetime.fromtimestamp(item[0] / 1000).strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
+            openTime = datetime.fromtimestamp(item[0] / 1000).strftime("%Y-%m-%d %H:%M:%S")
             openPirce = item[1]
             high = item[2]
             low = item[3]
