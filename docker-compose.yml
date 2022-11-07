@@ -2,42 +2,35 @@ version: "3.9"
 services:
   mosquitto:
     image: eclipse-mosquitto
-    restart: always
     hostname: mosquitto
     ports:
       - 1883:1883
       - 9001:9001
     volumes:
       - ./mqtt/:/mosquitto/
-    logging:
-      driver: "json-file"
-      options:
-        max-size: 10m
-        max-file: "5"
 
-  
   binancebot:
-    build: 
+    build:
       context: ./binance
-      dockerfile: Dockerfile      
+      dockerfile: Dockerfile
     hostname: binancebot
+    ports:
+      - 5002:5002
+    volumes:
+      - ./binance:/app/binance/
+      - ./utils/:/app/binance/utils/
     env_file:
       - .env
-    logging:
-      driver: "json-file"
-      options:
-        max-size: 10m
-        max-file: "5"
 
   slackbot:
     build:
       context: ./slack
       dockerfile: Dockerfile
     hostname: slackbot
+    ports:
+      - 5001:5001
+    volumes:
+      - ./slack:/app/slack/
+      - ./utils/:/app/slack/utils/
     env_file:
       - .env
-    logging:
-      driver: "json-file"
-      options:
-        max-size: 10m
-        max-file: "5"

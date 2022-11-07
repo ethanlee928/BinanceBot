@@ -1,5 +1,13 @@
 version: "3.9"
 services:
+  mosquitto:
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "5"
+
   binancebot:
     restart: always
     ports:
@@ -7,14 +15,23 @@ services:
     volumes:
       - ./binance:/app/binance/
       - ./utils/:/app/binance/utils/
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "5"
     command: python3 -u ./binance/binancebot.py
 
   slackbot:
     restart: always
     ports:
-     - 5001:5001
+      - 5001:5001
     volumes:
       - ./slack:/app/slack/
       - ./utils/:/app/slack/utils/
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: "5"
     command: python3 -u ./slack/slackbot.py
-    
