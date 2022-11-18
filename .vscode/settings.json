@@ -1,5 +1,4 @@
 {
-    "makefile.extensionOutputFolder": "./.vscode",
     "python.formatting.provider": "black",
     "python.formatting.blackArgs": [
         "--line-length",
