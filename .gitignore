@@ -5,3 +5,4 @@ __pycache__
 test*
 *venv
 password.txt
+.DS_Store

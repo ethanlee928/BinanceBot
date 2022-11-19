@@ -16,11 +16,12 @@ services:
       dockerfile: Dockerfile
     container_name: binancebot
     hostname: binancebot
+    working_dir: /binance
     ports:
       - 5002:5002
     volumes:
-      - ./binance:/app/binance/
-      - ./utils/:/app/binance/utils/
+      - ./binance:/binance/
+      - ./utils/:/binance/utils:ro
     env_file:
       - .env
 
@@ -30,10 +31,11 @@ services:
       dockerfile: Dockerfile
     container_name: slackbot
     hostname: slackbot
+    working_dir: /slack
     ports:
       - 5001:5001
     volumes:
-      - ./slack:/app/slack/
-      - ./utils/:/app/slack/utils/
+      - ./slack:/slack/
+      - ./utils/:/slack/utils:ro
     env_file:
       - .env
