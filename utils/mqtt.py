@@ -1,11 +1,31 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from typing import List, TypeAlias, Type
 
 import paho.mqtt.client as mqtt
 from overrides import overrides
 
 from .broker import Broker
-from .logger import logger, get_logger
+from .logger import get_logger
+
+
+class MQTTMessage(ABC):
+    def __init__(self, topic: str, payload: bytes) -> None:
+        self.topic = topic
+        self.payload = payload
+
+    @staticmethod
+    def from_str(topic: str, message: str) -> MQTTMessage:
+        return MQTTMessage(topic=topic, payload=bytes(message, "utf8"))
+
+
+class MQTTMessageHandler(ABC):
+    @abstractmethod
+    def on_MQTTMessage(self, mqtt_message: MQTTMessage):
+        pass
+
+
+Handlers: TypeAlias = List[Type[MQTTMessageHandler]]
 
 
 class MQTTClient(ABC):
@@ -34,6 +54,7 @@ class Subscriber(MQTTClient):
     def __init__(self, client_id: str, broker: Broker, topic) -> None:
         super().__init__(client_id, broker)
         self.topic = topic
+        self.handlers = []
 
     @overrides
     def start(self):
@@ -42,8 +63,15 @@ class Subscriber(MQTTClient):
         self.client.loop_forever()
 
     def on_message(self, client, udata, msg):
-        message = msg.payload.decode()
-        self.logger.info(f"message received: {message}")
+        mqtt_msg = MQTTMessage(topic=self.topic, payload=msg.payload)
+        self.logger.debug(f"received payload: {mqtt_msg.payload} from topic: {mqtt_msg.topic}")
+        handler: Type[MQTTMessageHandler]
+        for handler in self.handlers:
+            handler.on_MQTTMessage(mqtt_message=mqtt_msg)
+
+    def register_handlers(self, handlers: Handlers) -> None:
+        self.logger.info("Adding handlers")
+        self.handlers = handlers
 
 
 class Publisher(MQTTClient):
@@ -55,12 +83,9 @@ class Publisher(MQTTClient):
     def start(self):
         self.client.loop_start()
 
-    def publish(self, topic, message):
-        msg = f"{message}"
-        result = self.client.publish(topic, msg)
-        status = result[0]
-        if status == 0:
-            self.logger.info("Send %s to topic %s" % (msg, topic))
-
+    def publish(self, message: MQTTMessage) -> None:
+        result = self.client.publish(message.topic, message.payload)
+        if result[0] == 0:
+            self.logger.debug(f"Send {message.payload} to topic {message.topic}")
         else:
-            self.logger.error("Failed to send message to topic %s" % topic)
+            self.logger.error(f"Failed to send message to topic {message.topic}")
