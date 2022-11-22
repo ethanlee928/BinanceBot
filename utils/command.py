@@ -29,8 +29,9 @@ class Command:
         PRICE = _BASE + 3
         INFO = _BASE + 4
 
-    def __init__(self, _id: ID, body: CommandBody) -> None:
+    def __init__(self, _id: ID, channel_id: str, body: CommandBody) -> None:
         self._id = _id
+        self.channel_id = channel_id
         self.body = body
 
     def to_payload(self) -> bytes:
