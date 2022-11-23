@@ -1,25 +1,19 @@
 import os
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Type
 from datetime import datetime
 
 import pandas as pd
 from binance.client import Client
 
-
-class BinanceRequest:
-    def __init__(self, coin_pair: str, body: Dict[str, Any]) -> None:
-        self.coin_pair = coin_pair
-        self.body = body
+from .requests import KlineRequest, InfoRequest, CoinPriceRequest
 
 
 class BinanceClient:
     def __init__(self) -> None:
         self.client = Client(os.getenv("BINANCE_KEY"), os.getenv("BINANCE_SECRET"))
 
-    def get_klines(self, request: BinanceRequest) -> pd.DataFrame:
-        _klines = self.client.get_historical_klines(
-            request.coin_pair, request.body.get("interval"), request.body.get("start_time")
-        )
+    def get_klines(self, request: KlineRequest) -> pd.DataFrame:
+        _klines = self.client.get_historical_klines(request.coin_pair, request.interval, request.start_time)
         klines = []
         for item in _klines:
             open_time = datetime.fromtimestamp(item[0] / 1000).strftime("%Y-%m-%d %H:%M:%S")
@@ -35,8 +29,8 @@ class BinanceClient:
         df = df.astype(float)
         return df
 
-    def get_coin_info(self, request: BinanceRequest) -> Dict[str, Any]:
-        candle = self.client.get_klines(symbol=request.coin_pair, interval=request.body.get("interval"))[-1]
+    def get_coin_info(self, request: InfoRequest) -> Dict[str, Any]:
+        candle = self.client.get_klines(symbol=request.coin_pair, interval=request.interval)[-1]
         info = {
             "openTime": datetime.fromtimestamp(candle[0] / 1000).strftime("%Y-%m-%d %H:%M:%S"),
             "openPrice": candle[1],
@@ -49,7 +43,7 @@ class BinanceClient:
         }
         return info
 
-    def get_coin_price(self, request: BinanceRequest) -> Tuple[float, float]:
+    def get_coin_price(self, request: CoinPriceRequest) -> Tuple[float, float]:
         avg_price: Dict[str, float] = self.client.get_avg_price(symbol=request.coin_pair)
         return (avg_price.get("mins"), avg_price.get("price"))
 

@@ -5,12 +5,12 @@ import pandas as pd
 import mplfinance as mpf
 
 from utils import logger
-from .binance import BinanceRequest
+from .requests import KlineRequest
 
 
-def plot_klines(kline: pd.DataFrame, request: BinanceRequest, data_dir: str, _type="candle"):
+def plot_klines(kline: pd.DataFrame, request: KlineRequest, data_dir: str, _type="candle"):
     try:
-        title = f'{request.coin_pair}-{request.body.get("interval")}'
+        title = f"{request.coin_pair}-{request.interval}"
         now = datetime.now().strftime("%Y-%m-%d-%H:%M:%S")
         save_dir = f"{data_dir}/{request.coin_pair}"
         if not os.path.exists(save_dir):
