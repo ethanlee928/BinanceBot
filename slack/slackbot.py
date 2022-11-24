@@ -1,18 +1,14 @@
 import os
-import time
-import json
 import argparse
 from flask import Flask
 
 from slack import WebClient
 from slackeventsapi import SlackEventAdapter
-from utils.mqtt import Subscriber, Publisher
-from utils.logger import get_logger
+
+from utils import Publisher, Command, Broker, MQTTMessage, logger, broker_config
 
 
 parser = argparse.ArgumentParser(description="Slack bot configuration.")
-parser.add_argument("--broker", default="mosquitto")
-parser.add_argument("--port", type=int, default=1883)
 parser.add_argument("--topic", default="pair")
 parser.add_argument("--client_id", default="slackbot-pub")
 args = parser.parse_args()
@@ -21,13 +17,9 @@ app = Flask(__name__)
 slack_events_adapter = SlackEventAdapter(os.getenv("SLACK_EVENT_TOKEN"), "/slack/events", app)
 slack_web_client = WebClient(os.getenv("SLACK_TOKEN"))
 
-broker = args.broker
-port = args.port
 topic = args.topic
-client_id = args.client_id
-pub = Publisher(broker, port, client_id)
+pub = Publisher(client_id=args.client_id, broker=Broker.from_dict(broker_config))
 
-logger = get_logger(name="SBOT")
 available_commands = ["chart", "price", "ping", "info", "help", "start", "stop"]
 
 
@@ -69,50 +61,8 @@ def message(payload):
         if textSlice[0] == "ping":
             handlePing(channel=channel)
 
-        if textSlice[0] == "start":
-            handleStart(command=textSlice, channel=channel, userID=userID)
-
-        if textSlice[0] == "stop":
-            handleStop(command=textSlice, channel=channel, userID=userID)
-
     except Exception as err:
         logger.error("Slack OnMessage error: %s" % err)
-
-
-def handleStart(command, channel, userID):
-    if len(command) != 3:
-        logger.info("Wrong syntax for starting price report")
-        message = "Wrong syntax for starting price report, try:\nstart (coinpair) (report interval)"
-        slackMsg(channelID=channel, msg=message)
-        return
-    coinPair = command[1].upper()
-    interval = command[2]
-    payload = {
-        "type": "start",
-        "coinPair": coinPair,
-        "interval": interval,
-        "userID": userID,
-        "channelID": channel,
-    }
-    payload = json.dumps(payload)
-    pub.publish(topic=topic, message=payload)
-
-
-def handleStop(command, channel, userID):
-    if len(command) != 2:
-        logger.info("Wrong syntax for stopping price report")
-        message = "Wrong syntax for stopping price report, try:\nstop (coinpair)"
-        return
-
-    coinPair = command[1].upper()
-    payload = {
-        "type": "stop",
-        "coinPair": coinPair,
-        "userID": userID,
-        "channelID": channel,
-    }
-    payload = json.dumps(payload)
-    pub.publish(topic=topic, message=payload)
 
 
 def handleChartPrice(command, channel):
@@ -125,15 +75,17 @@ def handleChartPrice(command, channel):
     coinPair = command[1].upper()
     interval = command[2]
     startTime = command[3]
-    payload = {
-        "type": "chart",
-        "coinPair": coinPair,
-        "interval": interval,
-        "startDate": startTime,
-        "channelID": channel,
-    }
-    payload = json.dumps(payload)
-    pub.publish(topic=topic, message=payload)
+    _command = Command(
+        _id=Command.ID.CHART,
+        channel_id=channel,
+        body={
+            "coin_pair": coinPair,
+            "interval": interval,
+            "start_time": startTime,
+        },
+    )
+    msg = MQTTMessage(topic=topic, payload=_command.to_payload())
+    pub.publish(message=msg)
 
 
 def handleCheckPrice(command, channel):
@@ -144,9 +96,15 @@ def handleCheckPrice(command, channel):
         return
 
     coinPair = command[1].upper()
-    payload = {"type": "price", "coinPair": coinPair, "channelID": channel}
-    payload = json.dumps(payload)
-    pub.publish(topic=topic, message=payload)
+    _command = Command(
+        _id=Command.ID.PRICE,
+        channel_id=channel,
+        body={
+            "coin_pair": coinPair,
+        },
+    )
+    msg = MQTTMessage(topic=topic, payload=_command.to_payload())
+    pub.publish(message=msg)
 
 
 def handleInfo(command, channel):
@@ -158,20 +116,22 @@ def handleInfo(command, channel):
 
     coinPair = command[1].upper()
     interval = command[2]
-    payload = {
-        "type": "info",
-        "coinPair": coinPair,
-        "interval": interval,
-        "channelID": channel,
-    }
-    payload = json.dumps(payload)
-    pub.publish(topic=topic, message=payload)
+    _command = Command(
+        _id=Command.ID.INFO,
+        channel_id=channel,
+        body={
+            "coin_pair": coinPair,
+            "interval": interval,
+        },
+    )
+    msg = MQTTMessage(topic=topic, payload=_command.to_payload())
+    pub.publish(message=msg)
 
 
 def handlePing(channel):
-    payload = {"type": "ping", "channelID": channel}
-    payload = json.dumps(payload)
-    pub.publish(topic=topic, message=payload)
+    command = Command(_id=Command.ID.PING, channel_id=channel, body={})
+    msg = MQTTMessage(topic=topic, payload=command.to_payload())
+    pub.publish(message=msg)
 
 
 def slackMsg(channelID, msg):
