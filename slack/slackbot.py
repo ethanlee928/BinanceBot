@@ -6,7 +6,7 @@ from slack import WebClient
 from slackeventsapi import SlackEventAdapter
 
 from utils import Publisher, Command, Broker, MQTTMessage, logger, broker_config
-from .operations import SlackEvent, SlackCommand
+from operations import SlackEvent, SlackCommand
 
 parser = argparse.ArgumentParser(description="Slack bot configuration.")
 parser.add_argument("--topic", default="pair")
