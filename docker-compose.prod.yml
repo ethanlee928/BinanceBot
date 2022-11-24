@@ -10,28 +10,22 @@ services:
 
   binancebot:
     restart: always
-    ports:
-      - 5000:5000
-    volumes:
-      - ./binance:/app/binance/
-      - ./utils/:/app/binance/utils/
+    env_file:
+      - .env
     logging:
       driver: "json-file"
       options:
         max-size: 10m
         max-file: "5"
-    command: python3 -u ./binance/binancebot.py
+    command: python3 -u ./binancebot.py
 
   slackbot:
     restart: always
-    ports:
-      - 5001:5001
-    volumes:
-      - ./slack:/app/slack/
-      - ./utils/:/app/slack/utils/
+    env_file:
+      - .env
     logging:
       driver: "json-file"
       options:
         max-size: 10m
         max-file: "5"
-    command: python3 -u ./slack/slackbot.py
+    command: python3 -u ./slackbot.py
