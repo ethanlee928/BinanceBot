@@ -30,7 +30,6 @@ class CoinPriceRequest(BinanceRequest):
 class BinanceRequestFactory:
     @staticmethod
     def from_command(command: Command) -> Type[BinanceRequest]:
-        print(command._id)
         match command._id:
             case Command.ID.PING:
                 return
