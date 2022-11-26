@@ -6,8 +6,8 @@ from .binance_command_handler import BinanceCommandHandler
 
 class MessageHandlerFactory:
     @staticmethod
-    def from_dict(_type: HandlerType, body: Dict[str, Any]) -> Type[MessageHandler]:
+    def create_handler(_type: HandlerType, **kwargs: Dict[str, Any]) -> Type[MessageHandler]:
         if _type == HandlerType.BINANCE:
-            return BinanceCommandHandler(client_id=body["client_id"], broker=body["broker"], topic=body["topic"])
+            return BinanceCommandHandler(client_id=kwargs["client_id"], broker=kwargs["broker"], topic=kwargs["topic"])
         else:
             raise NotImplementedError("The input type of handler is not supported")

@@ -15,9 +15,8 @@ args = parser.parse_args()
 app = Flask(__name__)
 slack_events_adapter = SlackEventAdapter(os.getenv("SLACK_EVENT_TOKEN"), "/slack/events", app)
 message_handlers = [
-    MessageHandlerFactory.from_dict(
-        _type=HandlerType.BINANCE,
-        body=dict(client_id=args.client_id, broker=Broker.from_dict(broker_config), topic=args.topic),
+    MessageHandlerFactory.create_handler(
+        _type=HandlerType.BINANCE, client_id=args.client_id, broker=Broker.from_dict(broker_config), topic=args.topic
     )
 ]
 
