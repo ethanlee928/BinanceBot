@@ -3,7 +3,8 @@ from typing import Dict, Any
 from overrides import override
 
 from utils import MQTTMessage, Command, Broker, Publisher, logger
-from operations import SlackCommand, SlackEvent, send_slack_message, MessageHandler
+from operations import SlackCommand, SlackEvent, send_slack_message
+from .base import MessageHandler
 
 
 class BinanceCommandHandler(MessageHandler):
