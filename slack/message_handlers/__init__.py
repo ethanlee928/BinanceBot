@@ -1,1 +1,2 @@
-from .base import HandlerType, MessageHandler, MessageHandlerFactory
+from .base import HandlerType, MessageHandler
+from .factory import MessageHandlerFactory
