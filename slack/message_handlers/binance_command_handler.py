@@ -1,15 +1,17 @@
 from typing import Dict, Any
 
+from overrides import override
 
 from utils import MQTTMessage, Command, Broker, Publisher, logger
-from operations import SlackCommand, SlackEvent, send_slack_message
+from operations import SlackCommand, SlackEvent, send_slack_message, MessageHandler
 
 
-class SlackMessageHandler:
+class BinanceCommandHandler(MessageHandler):
     def __init__(self, client_id: str, broker: Broker, topic: str) -> None:
         self.publisher = Publisher(client_id=client_id, broker=broker)
         self.topic = topic
 
+    @override
     def on_message(self, payload: Dict[str, Any]) -> None:
         if self._is_bot_user(payload=payload):
             return

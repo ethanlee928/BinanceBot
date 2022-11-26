@@ -5,7 +5,7 @@ from flask import Flask
 from slackeventsapi import SlackEventAdapter
 
 from utils import Broker, logger, broker_config
-from message_handler import SlackMessageHandler
+from message_handlers import MessageHandlerFactory, HandlerType
 
 parser = argparse.ArgumentParser(description="Slack bot configuration.")
 parser.add_argument("--topic", default="pair")
@@ -14,15 +14,19 @@ args = parser.parse_args()
 
 app = Flask(__name__)
 slack_events_adapter = SlackEventAdapter(os.getenv("SLACK_EVENT_TOKEN"), "/slack/events", app)
-message_handler = SlackMessageHandler(
-    client_id=args.client_id, broker=Broker.from_dict(broker_config), topic=args.topic
-)
+message_handlers = [
+    MessageHandlerFactory.from_dict(
+        _type=HandlerType.BINANCE,
+        body=dict(client_id=args.client_id, broker=Broker.from_dict(broker_config), topic=args.topic),
+    )
+]
 
 
 @slack_events_adapter.on("message")
 def message(payload):
     try:
-        message_handler.on_message(payload=payload)
+        for handler in message_handlers:
+            handler.on_message(payload=payload)
     except Exception as err:
         logger.error("Slack OnMessage error: %s" % err)
 

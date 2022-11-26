@@ -28,4 +28,4 @@ services:
       options:
         max-size: 10m
         max-file: "5"
-    command: python3 -u ./slackbot.py
+    command: python3 -u ./main.py
