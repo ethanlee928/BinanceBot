@@ -1,16 +1,13 @@
 from typing import Dict, Any
-import os
 
-from slack import WebClient
 
 from utils import MQTTMessage, Command, Broker, Publisher, logger
-from operations import SlackCommand, SlackEvent
+from operations import SlackCommand, SlackEvent, send_slack_message
 
 
 class SlackMessageHandler:
     def __init__(self, client_id: str, broker: Broker, topic: str) -> None:
         self.publisher = Publisher(client_id=client_id, broker=broker)
-        self.slack_web_client = WebClient(os.getenv("SLACK_TOKEN"))
         self.topic = topic
 
     def on_message(self, payload: Dict[str, Any]) -> None:
@@ -24,10 +21,6 @@ class SlackMessageHandler:
         command: Command = slack_command.to_command()
         msg = MQTTMessage(topic=self.topic, payload=command.to_payload())
         self.publisher.publish(message=msg)
-
-    def send_slack_msg(self, channel_id: str, msg: str):
-        logger.info(f"Msg sent to {channel_id}: {msg}")
-        return self.slack_web_client.chat_postMessage(channel=channel_id, text=msg)
 
     def _is_bot_user(self, payload: Dict[str, Any]) -> bool:
         event = payload.get("event", {})
@@ -43,5 +36,5 @@ class SlackMessageHandler:
             + "3. price (coinpair)\n"
             + "4. info (coinpair) (interval)"
         )
-        res = self.send_slack_msg(channel_id=channel_id, msg=message)
+        res = send_slack_message(channel_id=channel_id, message=message)
         logger.info(f"Help message response: {res}")
