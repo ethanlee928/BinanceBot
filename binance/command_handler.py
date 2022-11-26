@@ -1,8 +1,6 @@
-import argparse
-
 from overrides import override
 
-from utils import Subscriber, Command, CommandHandler, Broker, logger, broker_config
+from utils import Command, CommandHandler, logger
 from operations import BinanceClient, SlackRequest, BinanceRequestFactory, plot_klines
 
 
@@ -63,28 +61,3 @@ class BinanceCommandHandler(CommandHandler):
         req = SlackRequest.create_msg_request(channel=command.channel_id, msg=message)
         res = req.post_request()
         logger.info(f"Posted request with response {res}")
-
-
-class BinanceBot:
-    def __init__(self, client_id: str, broker: Broker, topic: str, data_dir: str) -> None:
-        self.subscriber = Subscriber(client_id=client_id, broker=broker, topic=topic)
-        self.data_dir = data_dir
-
-    def start(self):
-        handlers = [BinanceCommandHandler(data_dir=self.data_dir)]
-        self.subscriber.register_handlers(handlers=handlers)
-        self.subscriber.start()
-
-
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(description="Binance bot configuration")
-    parser.add_argument("--topic", default="pair")
-    parser.add_argument("--client_id", default="binancebot")
-    parser.add_argument("--data_dir", default="./binance/data")
-    args = parser.parse_args()
-
-    app = BinanceBot(
-        client_id=args.client_id, broker=Broker.from_dict(broker_config), topic=args.topic, data_dir=args.data_dir
-    )
-    app.start()
