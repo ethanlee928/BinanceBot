@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Binance bot configuration")
     parser.add_argument("--topic", default="pair")
     parser.add_argument("--client_id", default="binancebot")
-    parser.add_argument("--data_dir", default="./binance/data")
+    parser.add_argument("--data_dir", default="./data")
     args = parser.parse_args()
 
     try:
