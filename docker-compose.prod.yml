@@ -9,6 +9,7 @@ services:
         max-file: "5"
 
   binancebot:
+    image: binancebot:${RELEASE_VERSION}
     restart: always
     env_file:
       - .env
@@ -17,9 +18,9 @@ services:
       options:
         max-size: 10m
         max-file: "5"
-    command: python3 -u ./main.py
 
   slackbot:
+    image: slackbot:${RELEASE_VERSION}
     restart: always
     env_file:
       - .env
@@ -28,4 +29,3 @@ services:
       options:
         max-size: 10m
         max-file: "5"
-    command: python3 -u ./main.py
