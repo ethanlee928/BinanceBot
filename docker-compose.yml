@@ -11,27 +11,13 @@ services:
       - ./mqtt/:/mosquitto/
 
   binancebot:
-    build:
-      context: ./binance
-      dockerfile: Dockerfile
     container_name: binancebot
     hostname: binancebot
-    working_dir: /binance
     ports:
       - 5002:5002
-    volumes:
-      - ./binance:/binance/
-      - ./utils/:/binance/utils:ro
 
   slackbot:
-    build:
-      context: ./slack
-      dockerfile: Dockerfile
     container_name: slackbot
     hostname: slackbot
-    working_dir: /slack
     ports:
       - 5001:5001
-    volumes:
-      - ./slack:/slack/
-      - ./utils/:/slack/utils:ro

@@ -1,11 +1,25 @@
 version: "3.9"
 services:
   binancebot:
+    build:
+      context: ./binance
+      dockerfile: Dockerfile
+    working_dir: /binance
+    volumes:
+      - ./binance:/binance/
+      - ./utils/:/binance/utils:ro
     env_file:
       - .env
     command: tail -f /dev/null
 
   slackbot:
+    build:
+      context: ./slack
+      dockerfile: Dockerfile
+    working_dir: /slack
+    volumes:
+      - ./slack:/slack/
+      - ./utils/:/slack/utils:ro
     env_file:
       - .env
     command: tail -f /dev/null
